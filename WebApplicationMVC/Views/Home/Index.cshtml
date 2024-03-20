@@ -1,0 +1,221 @@
+﻿@using WebApplicationMVC.Models
+@model List<Product>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product table</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        html {
+            padding-left: 10%;
+            padding-right: 10%;
+        }
+        th {
+            padding: 10px;
+            font-size: 25px;
+            word-break: break-word;
+        }
+
+        th:nth-child(1) {
+            border-right: 1px solid black;
+            width: 15%;
+            max-width: 100px;
+        }
+        th:nth-child(2) {
+            border-right: 1px solid black;
+            width: 75%;
+            max-width: 100px;
+            border-bottom: 1px solid grey;
+        }
+
+        th:nth-child(3) {
+            width: 5%;
+        }
+        th:nth-child(4) {
+            width: 5%;
+        }
+
+        thead th:nth-child(1) {
+            border-right: none;
+        }
+        thead th:nth-child(2) {
+            border-right: none;
+        }
+
+        table {
+            width: 100%;
+            border-bottom: 3px solid black;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            border-bottom: 1px solid black;
+        }
+        button {
+            width: 120px;
+            height:50px;
+        }
+
+        .searchbar {
+            width: 100%;
+            max-width: 200px;
+            display: inline-flex;
+            padding: 10%;
+        }
+        .btn {
+            width: 20%;
+            max-width: 50px;
+            max-height: 40px;
+        }
+
+        .search_input {
+            max-width: 150px;
+            width: 80%;
+            max-height: 40px;
+        }
+
+
+    </style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr><th><div class="searchbar"><input id="filter" class="search_input" type="text" placeholder="Фильтрация"><button id="filterBut" class="btn"><i class="fa fa-search "></i></button></div></th><th><h3>Список продукции</h3></th><th><th><button id="createBut" class="add">Добавить</button></th></tr>
+        </thead>
+        
+        <tr><th>Название</th><th>Описание</th></tr>
+        @foreach (Product product in Model)
+        {
+            <tr>
+                <th>@product.Name</th>
+                <th>@product.Description</th>
+                <th><button class="updateBut" productId="@product.Id" onclick="updateEvent(event)">Редактировать</button></th>
+                <th><button class="deleteBut" productId="@product.Id" onclick="deleteEvent(event)">Удаление</button></th>
+            </tr>
+        }
+    </table>
+    <script>
+        async function createProduct(productName, productDescription) {
+            const response = await fetch("/Home/Index/", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify({
+                    name: productName,
+                    description: productDescription
+                }),
+            });
+            if (response.ok) {
+                alert("Добавлено");
+                window.location = "/";
+            } else {
+                alert("Произошла ошибка: " + response.status);
+            }
+        }
+
+        async function deleteProduct(productId) {
+            const response = await fetch("/Home/Delete", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify( productId ),
+            });
+            if (response.ok) {
+                alert("Удаление прошло успешно");
+                window.location = "/";
+            } else {
+                alert("Произошла ошибка: " + response.status);
+            }
+        }
+
+        async function updateProduct(productId, productName, productDescription) {
+            const response = await fetch("/Home/Update", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify({
+                    id: productId,
+                    name: productName,
+                    description: productDescription
+                }),
+            });
+            if (response.ok) {
+                alert("Продукт обновлен");
+                window.location = "/";
+            } else {
+                alert("Произошла ошибка: " + response.status);
+            }
+        }
+
+        function getProductName() {
+            let productName = prompt("Введите наименование продукта");
+            if (productName == "") {
+                alert("Имя продукта не может быть пустым!");
+                return getProductName();
+            } else if (productName.length > 250) {
+                alert("Имя продукта не может иметь более 250 символов");
+                return getProductName();
+            } else if (productName == null) {
+                return false;
+            }
+            return productName;
+        }
+
+        function getProductDescription() {
+            let productDescription = prompt("Введите описание продукта");
+            if (productDescription == null) {
+                return false;
+            }
+            return productDescription;
+        }
+
+        // document.querySelector(".updateBut").addEventListener("click", async (event) => {
+        //     let productId = event.currentTarget.getAttribute("productId");
+        //     let productName = getProductName();
+        //     if (!productName) return;
+        //     let productDescription = getProductDescription();
+        //     if (!productDescription) return;
+        //     await updateProduct(productId, productName, productDescription);
+        // });
+
+        // document.querySelector(".deleteBut").addEventListener("ckick", async (event) => {
+        //     let productId = event.currentTarget.getAttribute("productId");
+        //     await deleteProduct(productId);
+        // });
+
+        async function updateEvent(event) {
+            let productId = event.currentTarget.getAttribute("productId");
+            let productName = getProductName();
+            if (productName === false) return;
+            let productDescription = getProductDescription();
+            if (productDescription === false) return;
+            await updateProduct(productId, productName, productDescription);
+        }
+
+        async function deleteEvent(event) {
+            let productId = event.currentTarget.getAttribute("productId");
+            await deleteProduct(productId);
+        }
+
+        document.getElementById("createBut").addEventListener("click", async (event) => {
+            let productName = getProductName();
+            if (productName === false) return;
+            let productDescription = getProductDescription();
+            if (productDescription === false) return;
+            await createProduct(productName, productDescription);
+        });
+
+        document.getElementById("filterBut").addEventListener("click", (event) => {
+            let filter = document.getElementById("filter").value;
+            window.location = "/Home/Index/" + filter;
+        });
+
+        
+    </script>
+</body>
+</html>
